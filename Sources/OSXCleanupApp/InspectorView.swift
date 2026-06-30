@@ -30,15 +30,25 @@ struct InspectorView: View {
                     }
                 }
 
-                if node.isDirectory && !node.children.isEmpty {
-                    Divider()
-                    Text("Double-click a tile to drill in").font(.caption).foregroundStyle(.tertiary)
+                Divider()
+                if c.tier == .never {
+                    // NEVER-tier nodes expose no deletion affordance at all.
+                    Label("Protected — cannot be deleted.", systemImage: "lock.fill")
+                        .font(.caption).foregroundStyle(.red)
+                } else {
+                    Button {
+                        model.toggleDeletion(node)
+                    } label: {
+                        Label(model.isMarkedForDeletion(node) ? "Unmark for deletion" : "Mark for deletion",
+                              systemImage: model.isMarkedForDeletion(node) ? "checkmark.circle.fill" : "trash")
+                    }
+                    Text("Tip: ⌘-click tiles to mark several at once.")
+                        .font(.caption2).foregroundStyle(.tertiary)
                 }
 
-                Divider()
-                Text("Read-only — M1 surfaces information only. No files are deleted.")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                if node.isDirectory && !node.children.isEmpty {
+                    Text("Double-click a tile to drill in").font(.caption2).foregroundStyle(.tertiary)
+                }
             } else {
                 Text("Select a tile to inspect it.")
                     .foregroundStyle(.secondary)

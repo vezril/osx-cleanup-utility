@@ -29,6 +29,7 @@ struct TreemapView: View {
     private func cell(for p: PlacedRect, child: SizeNode?) -> some View {
         let tier = child.map { model.classification($0).tier } ?? .risky
         let isSelected = model.selected?.path == p.id
+        let isMarked = child.map { model.isMarkedForDeletion($0) } ?? false
         let w = CGFloat(p.rect.width)
         let h = CGFloat(p.rect.height)
 
@@ -37,9 +38,16 @@ struct TreemapView: View {
                 .fill(tier.color.opacity(isSelected ? 0.95 : 0.7))
                 .overlay(
                     Rectangle().strokeBorder(
-                        isSelected ? Color.primary : Color.black.opacity(0.25),
-                        lineWidth: isSelected ? 2 : 0.5)
+                        isMarked ? Color.accentColor : (isSelected ? Color.primary : Color.black.opacity(0.25)),
+                        lineWidth: isMarked ? 3 : (isSelected ? 2 : 0.5))
                 )
+            if isMarked {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.white, Color.accentColor)
+                    .padding(2)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .allowsHitTesting(false)
+            }
             if w > 54 && h > 24, let child {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(child.name)
@@ -58,6 +66,11 @@ struct TreemapView: View {
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { if let child { model.drill(into: child) } }
         .onTapGesture(count: 1) { if let child { model.select(child) } }
+        .simultaneousGesture(
+            TapGesture().modifiers(.command).onEnded {
+                if let child { model.toggleDeletion(child) }
+            }
+        )
         .help(child.map { "\($0.name) — \(formatBytes($0.size)) — \(model.classification($0).tier.label)" } ?? p.id)
     }
 }

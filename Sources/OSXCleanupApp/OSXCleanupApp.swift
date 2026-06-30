@@ -28,11 +28,44 @@ struct ContentView: View {
             if model.fda == .notGranted {
                 FDAOnboardingView(model: model).padding(8)
             }
+            if model.rootTree != nil {
+                presetsBar
+                Divider()
+            }
             content
             Divider()
             footer
         }
         .onAppear { model.refreshFDA() }
+        .sheet(isPresented: Binding(get: { model.showingPlan }, set: { model.showingPlan = $0 })) {
+            PlanPreviewSheet(model: model)
+        }
+        .sheet(isPresented: Binding(get: { model.showingResults }, set: { model.showingResults = $0 })) {
+            ResultsSheet(model: model)
+        }
+    }
+
+    // MARK: - presets + deletion bar
+
+    private var presetsBar: some View {
+        HStack(spacing: 8) {
+            Text("Presets:").font(.caption).foregroundStyle(.secondary)
+            ForEach(CleanupPresets.all) { preset in
+                Button(preset.name) { model.applyPreset(preset) }
+                    .buttonStyle(.bordered).controlSize(.small)
+            }
+            Spacer()
+            if !model.deletionSelection.isEmpty {
+                Text("\(model.deletionSelection.count) selected · \(formatBytes(model.selectedReclaimable))")
+                    .font(.caption).foregroundStyle(.secondary)
+                Button("Clear") { model.clearDeletionSelection() }
+                    .buttonStyle(.borderless).controlSize(.small)
+                Button("Review & Delete…") { model.buildPlan() }
+                    .buttonStyle(.borderedProminent).controlSize(.small)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
     }
 
     // MARK: - toolbar
@@ -120,7 +153,7 @@ struct ContentView: View {
         HStack {
             TierLegend()
             Spacer()
-            Text("Read-only — no files are deleted")
+            Text("Deletions move to Trash by default · protected paths can never be removed")
                 .font(.caption2).foregroundStyle(.tertiary)
         }
         .padding(.horizontal, 12)

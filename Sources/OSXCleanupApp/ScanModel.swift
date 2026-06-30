@@ -55,6 +55,7 @@ final class ScanModel {
         }.value
 
         rootTree = SizeTree.build(from: records, root: rootPath)
+        indexSizes()
         scannedCount = records.count
         phase = .done
     }
@@ -83,5 +84,88 @@ final class ScanModel {
     func resetToRoot() {
         path = []
         selected = nil
+    }
+
+    // MARK: - Deletion (M2)
+
+    /// Paths selected for deletion, mapped to their allocated size.
+    var deletionSelection: [String: Int64] = [:]
+    /// Lookup of every scanned path → rolled-up size, for presets and totals.
+    private var sizeIndex: [String: Int64] = [:]
+    var mode: DeletionMode = .trash
+    var plan: DeletionPlan?
+    var showingPlan = false
+    var results: [DeletionExecutor.ItemResult]?
+    var showingResults = false
+
+    func isMarkedForDeletion(_ node: SizeNode) -> Bool {
+        deletionSelection[node.path] != nil
+    }
+
+    /// Toggle a node's membership in the deletion selection. `NEVER` nodes can
+    /// never be marked.
+    func toggleDeletion(_ node: SizeNode) {
+        guard classification(node).tier != .never else { return }
+        if deletionSelection[node.path] != nil {
+            deletionSelection[node.path] = nil
+        } else {
+            deletionSelection[node.path] = node.size
+        }
+    }
+
+    var selectedReclaimable: Int64 { deletionSelection.values.reduce(0, +) }
+
+    func clearDeletionSelection() { deletionSelection = [:] }
+
+    /// Add a curated preset's resolved paths to the deletion selection.
+    func applyPreset(_ preset: CleanupPreset) {
+        let resolved = CleanupPresets.resolve(
+            preset, home: NSHomeDirectory(),
+            exists: { FileManager.default.fileExists(atPath: $0) })
+        for p in resolved {
+            deletionSelection[p] = sizeIndex[p] ?? 0
+        }
+    }
+
+    /// Build the deletion plan from the current selection and show the preview.
+    func buildPlan() {
+        let selection = deletionSelection.map { SelectedPath(path: $0.key, allocatedSize: $0.value) }
+        plan = DeletionPlanner.plan(selecting: selection, mode: mode)
+        showingPlan = true
+    }
+
+    /// Rebuild the plan when the Trash/Permanent mode changes while previewing.
+    func updateMode(_ newMode: DeletionMode) {
+        mode = newMode
+        if showingPlan { buildPlan() }
+    }
+
+    var requiredConfirmation: ConfirmationLevel {
+        plan.map { ConfirmationPolicy.requiredConfirmation($0) } ?? .none
+    }
+
+    /// Execute the current plan, then rescan and clear the selection.
+    func executePlan() async {
+        guard let plan else { return }
+        let exec = DeletionExecutor()
+        let outcome = await Task.detached(priority: .userInitiated) {
+            exec.execute(plan)
+        }.value
+        results = outcome
+        showingPlan = false
+        showingResults = true
+        clearDeletionSelection()
+        await scan(rootPath: rootPath)
+    }
+
+    /// Build the path→size index by walking the rolled-up tree.
+    func indexSizes() {
+        var index: [String: Int64] = [:]
+        func walk(_ node: SizeNode) {
+            index[node.path] = node.size
+            for child in node.children { walk(child) }
+        }
+        if let rootTree { walk(rootTree) }
+        sizeIndex = index
     }
 }

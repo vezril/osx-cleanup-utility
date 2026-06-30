@@ -10,10 +10,11 @@ native SwiftUI app that **shows you what is taking up space** and lets you
 **reclaim it safely**, with important system files protected as a hard,
 non-negotiable rule.
 
-> **Status: Milestone 1 (read-only scan & visualize).** The app scans a folder,
-> classifies every location into a 5-tier safety model, and renders a treemap
-> of disk usage with an inspector. **It is strictly read-only — nothing is ever
-> deleted** (deletion arrives in M2). See the roadmap below.
+> **Status: Milestone 2 (safe deletion).** The app scans a folder, classifies
+> every location into a 5-tier safety model, renders a treemap, and can now
+> **reclaim space** — selected files/folders are **moved to the Trash by
+> default** (reversible), behind a dry-run preview and tier-scaled confirmation.
+> Protected system paths can never be removed. See the roadmap below.
 
 ## Safety stance (non-negotiable)
 
@@ -70,8 +71,33 @@ right-click the app and choose **Open**, then confirm in the Gatekeeper dialog.
    right Settings pane. Without it, those areas are clearly marked as *hidden*,
    never reported as empty, and everything else still scans.
 
-Milestone 1 is **read-only**: there is deliberately no delete, trash, or "clean"
-control anywhere in the UI.
+### Deleting safely (Milestone 2)
+
+1. **Select** what to remove: ⌘-click tiles to mark several, use the **Mark for
+   deletion** button in the inspector, or click a **preset** (Empty Trash, Xcode
+   DerivedData, User Caches, Developer Caches) to bulk-select known-safe items.
+2. Click **Review & Delete…** for a **dry-run preview**: exactly what will be
+   removed, the per-tier breakdown, the reclaimable total, and any **refused**
+   (protected) paths — nothing has happened yet.
+3. Choose **Move to Trash** (default, reversible) or **Delete permanently**.
+   Confirmation scales with risk:
+
+   | Highest tier in selection | Confirmation required          |
+   | ------------------------- | ------------------------------ |
+   | Safe                      | a single click                 |
+   | Cache                     | click + "will regenerate" note |
+   | Risky / Delegated         | **type `DELETE`** to confirm   |
+   | (Permanent mode)          | escalates one step further     |
+
+4. After deletion you get a **result summary** (trashed / deleted / failed /
+   refused) and the folder is rescanned automatically.
+
+**Safety guarantees:** protected/system (`NEVER`) paths are excluded by the
+planner *and* re-checked by the executor immediately before removal — they can
+never be deleted. Trash-by-default means mistakes are recoverable via Finder's
+**Put Back**. A locked or vanished file is reported but never aborts the batch.
+Delegated cleanup (`tmutil` snapshots, Docker, Homebrew) is **M3** — for now
+those show as `Delegated` and are best cleaned with their own tools.
 
 ## Run the tests
 
@@ -125,8 +151,8 @@ follow [Conventional Commits](https://www.conventionalcommits.org/)
 | Milestone | Scope                                                                 |
 | --------- | --------------------------------------------------------------------- |
 | **M0** ✅ | Scaffold: buildable app, TDD harness, CI/CD                            |
-| **M1** ✅ | Read-only scanner + 5-tier safety classifier + treemap UI + Full Disk Access onboarding (this milestone) |
-| **M2**    | Manual + curated-preset deletion (direct file/folder removal, "move to Trash" default) |
+| **M1** ✅ | Read-only scanner + 5-tier safety classifier + treemap UI + Full Disk Access onboarding |
+| **M2** ✅ | Manual + curated-preset deletion (Mechanism A, "move to Trash" default, tiered confirmation) (this milestone) |
 | **M3**    | Delegated cleanup: APFS snapshots (`tmutil`), Docker, Homebrew, npm/pip/cargo |
 | **M4+**   | Scheduled scans, dry-run/undo, exclusions, signing + notarization, Homebrew cask |
 

@@ -36,16 +36,16 @@
 
 ## 5. Deletion UI (build-verified)
 
-- [ ] 5.1 Add multi-selection to the treemap/inspector (select multiple tiles; show running selected count + reclaimable total)
-- [ ] 5.2 Add a curated-presets bar (one-click safe selections) wired to the resolver
-- [ ] 5.3 Build the plan-preview sheet: removable items, per-tier breakdown, reclaimable total, refused items with reasons; Trash vs Permanent toggle
-- [ ] 5.4 Build the tiered confirmation flow: simple / warning / type-to-confirm per `requiredConfirmation`; escalate for permanent
-- [ ] 5.5 Wire execution + post-deletion result summary (trashed/deleted/failed/refused counts) and trigger a rescan
-- [ ] 5.6 Assert NEVER-tier nodes expose no delete affordance (UI review + checklist)
+- [x] 5.1 Add multi-selection to the treemap/inspector (select multiple tiles; show running selected count + reclaimable total)
+- [x] 5.2 Add a curated-presets bar (one-click safe selections) wired to the resolver
+- [x] 5.3 Build the plan-preview sheet: removable items, per-tier breakdown, reclaimable total, refused items with reasons; Trash vs Permanent toggle
+- [x] 5.4 Build the tiered confirmation flow: simple / warning / type-to-confirm per `requiredConfirmation`; escalate for permanent
+- [x] 5.5 Wire execution + post-deletion result summary (trashed/deleted/failed/refused counts) and trigger a rescan
+- [x] 5.6 Assert NEVER-tier nodes expose no delete affordance (UI review + checklist)
 
 ## 6. Integration & verification
 
-- [ ] 6.1 End-to-end on a disposable temp folder: select → preview → confirm → items move to Trash → rescan reflects the change (no real user data touched)
-- [ ] 6.2 Run full `swift build` + `swift test` from a clean `.build`; confirm green
-- [ ] 6.3 Run `openspec validate safe-deletion`; resolve issues
-- [ ] 6.4 Confirm every scenario in the specs maps to a task; update README (M2 usage, Trash-default + permanent opt-in, confirmation tiers) and roadmap
+- [~] 6.1 End-to-end on a disposable temp folder: select → preview → confirm → items move to Trash → rescan reflects the change (no real user data touched)
+- [x] 6.2 Run full `swift build` + `swift test` from a clean `.build`; confirm green
+- [x] 6.3 Run `openspec validate safe-deletion`; resolve issues
+- [x] 6.4 Confirm every scenario in the specs maps to a task; update README (M2 usage, Trash-default + permanent opt-in, confirmation tiers) and roadmap
