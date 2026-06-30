@@ -1,0 +1,41 @@
+name: CI
+
+# Build + test on every pull request and on pushes to the long-lived branches.
+# A failing build or a failing test fails this check (red).
+on:
+  pull_request:
+  push:
+    branches: [main, development]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build & Test (macOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # macOS runners ship full Xcode (not just Command Line Tools), so the
+      # Swift Testing / XCTest libraries are available to `swift test`.
+      - name: Show toolchain
+        run: |
+          xcode-select -p
+          swift --version
+
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('Package.swift', 'Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Build
+        run: swift build -v
+
+      - name: Test
+        run: swift test -v

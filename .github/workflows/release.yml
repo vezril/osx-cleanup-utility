@@ -1,0 +1,80 @@
+name: Release
+
+# Triggered by semantic-version tags (vX.Y.Z). The job itself is gated to the
+# main branch: a tag that does not point at a commit contained in main exits
+# early without publishing. Produces an UNSIGNED .app/.zip artifact — no Apple
+# Developer signing/notarization secrets are required (deferred to a later
+# milestone). End users right-click → Open on first launch (see README).
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write # needed to create the GitHub Release
+
+jobs:
+  release:
+    name: Build & publish unsigned artifact
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need full history to check the tag is on main
+
+      - name: Verify tag is on main
+        run: |
+          if git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
+            echo "Tag commit is contained in main — proceeding."
+          else
+            echo "::error::Tag ${GITHUB_REF_NAME} is not on main; refusing to release."
+            exit 1
+          fi
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Build (release)
+        run: swift build -c release -v
+
+      - name: Assemble unsigned .app bundle
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          APP="osx-cleanup-utility.app"
+          BIN_SRC="$(swift build -c release --show-bin-path)/osx-cleanup"
+          mkdir -p "${APP}/Contents/MacOS"
+          cp "${BIN_SRC}" "${APP}/Contents/MacOS/osx-cleanup"
+          cat > "${APP}/Contents/Info.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleName</key><string>osx-cleanup-utility</string>
+            <key>CFBundleDisplayName</key><string>osx-cleanup-utility</string>
+            <key>CFBundleIdentifier</key><string>dev.vezril.osx-cleanup-utility</string>
+            <key>CFBundleExecutable</key><string>osx-cleanup</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>CFBundleShortVersionString</key><string>${VERSION}</string>
+            <key>CFBundleVersion</key><string>${VERSION}</string>
+            <key>LSMinimumSystemVersion</key><string>14.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+          </dict>
+          </plist>
+          PLIST
+          ZIP="osx-cleanup-utility-${GITHUB_REF_NAME}-unsigned.zip"
+          ditto -c -k --keepParent "${APP}" "${ZIP}"
+          echo "ARTIFACT=${ZIP}" >> "${GITHUB_ENV}"
+
+      - name: Publish GitHub Release with unsigned artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARTIFACT }}
+          name: ${{ github.ref_name }}
+          body: |
+            Unsigned build of osx-cleanup-utility ${{ github.ref_name }}.
+
+            This artifact is **not code-signed or notarized**. On first launch,
+            right-click the app and choose **Open**, then confirm. Signing and
+            notarization are planned for a later milestone.
