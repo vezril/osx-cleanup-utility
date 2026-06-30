@@ -61,9 +61,24 @@ swift run osx-cleanup
 ```
 
 A release build of the app bundle is produced by CI on tagged releases (see
-below), carrying the app icon (see [`docs/app-icon/`](docs/app-icon/)). Released
-artifacts are currently **unsigned**: on first launch, right-click the app and
-choose **Open**, then confirm in the Gatekeeper dialog.
+below), carrying the app icon (see [`docs/app-icon/`](docs/app-icon/)).
+
+#### Running the unsigned download (Gatekeeper)
+
+Released artifacts are currently **unsigned and un-notarized**, so after you
+download and unzip the `.app`, macOS quarantines it. On recent macOS this shows
+up as **"… is damaged and can't be opened"** (it isn't damaged — that's
+Gatekeeper). Remove the quarantine flag and it will open:
+
+```bash
+# point this at wherever you unzipped the app
+xattr -dr com.apple.quarantine /path/to/osx-cleanup-utility.app
+# e.g.  xattr -dr com.apple.quarantine ~/Downloads/osx-cleanup-utility.app
+```
+
+Then double-click the app to launch it. (`xattr -cr <app>` also works — it
+clears all extended attributes.) This step goes away once the app is signed and
+notarized (a planned milestone).
 
 ### Using it (Milestone 1)
 
