@@ -10,11 +10,11 @@ native SwiftUI app that **shows you what is taking up space** and lets you
 **reclaim it safely**, with important system files protected as a hard,
 non-negotiable rule.
 
-> **Status: Milestone 3 (delegated cleanup).** On top of scan + visualize (M1)
-> and safe file deletion (M2), the app now reclaims the bloat that file deletion
-> *can't* safely touch — **APFS local snapshots** (via `tmutil`), **Docker**, and
-> **package-manager caches** — by running each tool's own vetted cleanup command.
-> No `sudo`; commands are fixed and never built from input. See the roadmap below.
+> **Status: Milestone 4 (personal protections + history).** On top of scan (M1),
+> safe deletion (M2), and delegated cleanup (M3), you can now mark **your own**
+> paths as protected (they're refused by the deletion planner, just like system
+> paths) and review a persisted **cleanup history** of everything you've
+> reclaimed. See the roadmap below.
 
 ## Safety stance (non-negotiable)
 
@@ -118,6 +118,21 @@ no `sudo` is ever used, and even snapshot dates parsed from `tmutil` are
 validated before being passed back as arguments. Tools are found at known
 install locations because a bundled app doesn't inherit your shell `PATH`.
 
+### Personal protections & history (Milestone 4)
+
+- **Protect your own paths** — in the inspector, click **Protect this path** to
+  mark any folder/file off-limits. Protected paths get a 🔒 badge and are
+  **refused by the deletion planner** with a "protected by you" reason, exactly
+  like system paths. Protection is *monotonic*: it can only ever add safety —
+  nothing here can expose a system (`NEVER`) path.
+- **Cleanup history** — open **History** from the toolbar to see every past
+  deletion and delegated run (newest first) with how much each reclaimed, plus
+  the list of your protected paths. Clear it any time.
+
+These persist across launches in a small JSON file under
+`~/Library/Application Support/dev.vezril.osx-cleanup-utility/` — which the app
+pointedly refuses to offer for deletion (it won't eat its own state).
+
 ## Run the tests
 
 Tests use the **Swift Testing** framework and live in the pure functional-core
@@ -172,8 +187,9 @@ follow [Conventional Commits](https://www.conventionalcommits.org/)
 | **M0** ✅ | Scaffold: buildable app, TDD harness, CI/CD                            |
 | **M1** ✅ | Read-only scanner + 5-tier safety classifier + treemap UI + Full Disk Access onboarding |
 | **M2** ✅ | Manual + curated-preset deletion (Mechanism A, "move to Trash" default, tiered confirmation) |
-| **M3** ✅ | Delegated cleanup: APFS snapshots (`tmutil`), Docker, Homebrew, npm/yarn/pnpm/pip (this milestone) |
-| **M4+**   | Scheduled scans, dry-run/undo, exclusions, signing + notarization, Homebrew cask |
+| **M3** ✅ | Delegated cleanup: APFS snapshots (`tmutil`), Docker, Homebrew, npm/yarn/pnpm/pip |
+| **M4** ✅ | Personal protections (user exclusions) + persisted cleanup history (this milestone) |
+| **M5+**   | Scheduled scans, signing + notarization, Homebrew cask distribution |
 
 ## Development workflow
 

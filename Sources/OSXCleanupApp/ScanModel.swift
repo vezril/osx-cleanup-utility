@@ -98,6 +98,16 @@ final class ScanModel {
     var results: [DeletionExecutor.ItemResult]?
     var showingResults = false
 
+    /// Shared persisted state (exclusions + history), injected by ContentView.
+    var appState: AppStateModel?
+
+    func isProtected(_ node: SizeNode) -> Bool { appState?.isProtected(node.path) ?? false }
+    func toggleProtect(_ node: SizeNode) {
+        guard let appState else { return }
+        if appState.isProtected(node.path) { appState.removeExclusion(node.path) }
+        else { appState.addExclusion(node.path) }
+    }
+
     func isMarkedForDeletion(_ node: SizeNode) -> Bool {
         deletionSelection[node.path] != nil
     }
@@ -130,7 +140,8 @@ final class ScanModel {
     /// Build the deletion plan from the current selection and show the preview.
     func buildPlan() {
         let selection = deletionSelection.map { SelectedPath(path: $0.key, allocatedSize: $0.value) }
-        plan = DeletionPlanner.plan(selecting: selection, mode: mode)
+        let excluded = appState?.effectiveExclusions ?? ExclusionSet()
+        plan = DeletionPlanner.plan(selecting: selection, mode: mode, excluded: excluded)
         showingPlan = true
     }
 
@@ -152,6 +163,18 @@ final class ScanModel {
             exec.execute(plan)
         }.value
         results = outcome
+        // Record this cleanup in the persisted history.
+        var counts: [String: Int] = [:]
+        for r in outcome {
+            switch r.outcome {
+            case .trashed: counts["trashed", default: 0] += 1
+            case .deleted: counts["deleted", default: 0] += 1
+            case .failed: counts["failed", default: 0] += 1
+            case .refused: counts["refused", default: 0] += 1
+            }
+        }
+        appState?.record(kind: .fileDeletion, itemCount: plan.items.count,
+                         reclaimedBytes: plan.reclaimableTotal, outcomeCounts: counts)
         showingPlan = false
         showingResults = true
         clearDeletionSelection()

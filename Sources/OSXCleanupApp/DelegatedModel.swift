@@ -27,6 +27,9 @@ final class DelegatedModel {
     private let runner = DelegatedRunner()
     private let snapshotMgr = SnapshotManager()
 
+    /// Shared persisted state, injected by ContentView (for history).
+    var appState: AppStateModel?
+
     /// Detect installed tools and list snapshots.
     func refresh() {
         let r = runner
@@ -61,6 +64,17 @@ final class DelegatedModel {
         let result = await Task.detached(priority: .userInitiated) { r.cleanup(provider) }.value
         rows[i].running = false
         rows[i].result = result
+        appState?.record(kind: .delegated, itemCount: 1, reclaimedBytes: 0,
+                         outcomeCounts: [outcomeLabel(result.outcome): 1])
+    }
+
+    private func outcomeLabel(_ o: DelegatedOutcome) -> String {
+        switch o {
+        case .succeeded: return "succeeded"
+        case .failed: return "failed"
+        case .timedOut: return "timedOut"
+        case .cancelled: return "cancelled"
+        }
     }
 
     func deleteSnapshot(_ date: String) async {
@@ -69,6 +83,10 @@ final class DelegatedModel {
         let result = await Task.detached(priority: .userInitiated) { mgr.delete(date: date) }.value
         snapshotBusy = false
         snapshotMessage = result == nil ? "Refused: invalid snapshot date." : "Snapshot deleted."
+        if result != nil {
+            appState?.record(kind: .delegated, itemCount: 1, reclaimedBytes: 0,
+                             outcomeCounts: ["snapshotDeleted": 1])
+        }
         refreshSnapshots()
     }
 

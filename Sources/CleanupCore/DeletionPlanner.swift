@@ -21,14 +21,23 @@ public struct SelectedPath: Equatable, Sendable {
 
 public enum DeletionPlanner {
 
-    public static func plan(selecting selection: [SelectedPath], mode: DeletionMode) -> DeletionPlan {
+    public static func plan(
+        selecting selection: [SelectedPath],
+        mode: DeletionMode,
+        excluded: ExclusionSet = ExclusionSet()
+    ) -> DeletionPlan {
         var items: [DeletionItem] = []
         var refused: [RefusedItem] = []
 
         for entry in selection {
             let c = SafetyClassifier.classify(entry.path)
+            // System protection is checked first and is absolute.
             if c.tier == .never {
                 refused.append(RefusedItem(path: entry.path, tier: .never, reason: c.reason))
+            } else if excluded.contains(entry.path) {
+                // User protection augments the blacklist: refused, distinct reason.
+                refused.append(RefusedItem(path: entry.path, tier: c.tier,
+                                           reason: "Protected by you — remove it from your exclusions to delete it."))
             } else {
                 items.append(DeletionItem(path: entry.path, tier: c.tier,
                                           allocatedSize: entry.allocatedSize, mode: mode))

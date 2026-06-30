@@ -42,6 +42,16 @@ struct InspectorView: View {
                         Label(model.isMarkedForDeletion(node) ? "Unmark for deletion" : "Mark for deletion",
                               systemImage: model.isMarkedForDeletion(node) ? "checkmark.circle.fill" : "trash")
                     }
+                    Button {
+                        model.toggleProtect(node)
+                    } label: {
+                        Label(model.isProtected(node) ? "Unprotect this path" : "Protect this path",
+                              systemImage: model.isProtected(node) ? "lock.open" : "lock")
+                    }
+                    if model.isProtected(node) {
+                        Text("Protected by you — it won't be offered for deletion.")
+                            .font(.caption2).foregroundStyle(.blue)
+                    }
                     Text("Tip: ⌘-click tiles to mark several at once.")
                         .font(.caption2).foregroundStyle(.tertiary)
                 }

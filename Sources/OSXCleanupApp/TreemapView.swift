@@ -48,6 +48,14 @@ struct TreemapView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                     .allowsHitTesting(false)
             }
+            if let child, model.isProtected(child) {
+                Image(systemName: "lock.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.blue)
+                    .padding(2)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                    .allowsHitTesting(false)
+            }
             if w > 54 && h > 24, let child {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(child.name)

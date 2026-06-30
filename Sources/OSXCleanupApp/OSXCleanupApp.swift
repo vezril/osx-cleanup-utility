@@ -21,7 +21,9 @@ struct OSXCleanupApp: App {
 struct ContentView: View {
     @State private var model = ScanModel()
     @State private var delegated = DelegatedModel()
+    @State private var appState = AppStateModel()
     @State private var showingDelegated = false
+    @State private var showingHistory = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -38,7 +40,11 @@ struct ContentView: View {
             Divider()
             footer
         }
-        .onAppear { model.refreshFDA() }
+        .onAppear {
+            model.refreshFDA()
+            model.appState = appState
+            delegated.appState = appState
+        }
         .sheet(isPresented: Binding(get: { model.showingPlan }, set: { model.showingPlan = $0 })) {
             PlanPreviewSheet(model: model)
         }
@@ -47,6 +53,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingDelegated) {
             DelegatedCleanupView(model: delegated)
+        }
+        .sheet(isPresented: $showingHistory) {
+            HistoryView(appState: appState)
         }
     }
 
@@ -93,6 +102,13 @@ struct ContentView: View {
                 Label("Delegated Cleanup…", systemImage: "wrench.and.screwdriver")
             }
             .help("Reclaim snapshots, Docker, and package-manager caches via their own tools")
+
+            Button {
+                showingHistory = true
+            } label: {
+                Label("History", systemImage: "clock.arrow.circlepath")
+            }
+            .help("View past cleanups and your protected paths")
 
             if model.phase == .scanning {
                 ProgressView().controlSize(.small)
