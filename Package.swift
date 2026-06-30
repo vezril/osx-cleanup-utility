@@ -25,6 +25,7 @@ let package = Package(
     ],
     products: [
         .library(name: "CleanupCore", targets: ["CleanupCore"]),
+        .library(name: "CleanupScan", targets: ["CleanupScan"]),
         .executable(name: "osx-cleanup", targets: ["OSXCleanupApp"]),
     ],
     targets: [
@@ -32,15 +33,27 @@ let package = Package(
         .target(
             name: "CleanupCore"
         ),
-        // Imperative shell — SwiftUI app, depends on the core.
+        // Platform layer — Foundation-backed filesystem I/O (scanner, Full Disk
+        // Access detection). Integration-tested against temp dirs. Depends on
+        // the pure core; the SwiftUI views stay out of it.
+        .target(
+            name: "CleanupScan",
+            dependencies: ["CleanupCore"]
+        ),
+        // Imperative shell — SwiftUI app, depends on core + platform layer.
         .executableTarget(
             name: "OSXCleanupApp",
-            dependencies: ["CleanupCore"]
+            dependencies: ["CleanupCore", "CleanupScan"]
         ),
         // Tests for the functional core.
         .testTarget(
             name: "CleanupCoreTests",
             dependencies: ["CleanupCore"]
+        ),
+        // Integration tests for the platform layer.
+        .testTarget(
+            name: "CleanupScanTests",
+            dependencies: ["CleanupScan"]
         ),
     ]
 )

@@ -28,16 +28,16 @@
 
 ## 5. Filesystem scanner (imperative shell)
 
-- [ ] 5.1 RED: write integration tests over a temp-dir fixture — nested files/folders enumerated with allocated+logical sizes; empty root reports zero; permission-denied/vanished entry skipped (not fatal); cancellation stops promptly
-- [ ] 5.2 GREEN: implement the streaming, cancellable scanner (`FileManager.enumerator`, `AsyncStream<FileRecord>`); make tests pass
-- [ ] 5.3 RED: write tests for scan-safety rules — symlinks not followed; symlink loop does not hang; hardlink counted once; descent into blacklisted subtree is pruned (no records emitted)
-- [ ] 5.4 GREEN: implement no-follow-symlinks, `(device,inode)` dedupe, and blacklist pruning (consult the classifier); make tests pass
-- [ ] 5.5 REFACTOR: extract resource-value reading (allocated size source) behind a small seam; measure on a large real dir, keep `FileManager` unless too slow (design open question)
+- [x] 5.1 RED: write integration tests over a temp-dir fixture — nested files/folders enumerated with allocated+logical sizes; empty root reports zero; permission-denied/vanished entry skipped (not fatal); cancellation stops promptly
+- [x] 5.2 GREEN: implement the streaming, cancellable scanner (`FileManager.enumerator`, `AsyncStream<FileRecord>`); make tests pass
+- [x] 5.3 RED: write tests for scan-safety rules — symlinks not followed; symlink loop does not hang; hardlink counted once; descent into blacklisted subtree is pruned (no records emitted)
+- [x] 5.4 GREEN: implement no-follow-symlinks, `(device,inode)` dedupe, and blacklist pruning (consult the classifier); make tests pass
+- [x] 5.5 REFACTOR: extract resource-value reading (allocated size source) behind a small seam; measure on a large real dir, keep `FileManager` unless too slow (design open question)
 
 ## 6. Full Disk Access detection + onboarding
 
-- [ ] 6.1 RED: write tests for FDA detection logic — readable probe → granted; permission error → not granted; non-existent/ambiguous probe → not granted (treat as ungranted). Inject the probe result so the unit test does no real I/O
-- [ ] 6.2 GREEN: implement detection over injectable probe(s); `swift test` green
+- [x] 6.1 RED: write tests for FDA detection logic — readable probe → granted; permission error → not granted; non-existent/ambiguous probe → not granted (treat as ungranted). Inject the probe result so the unit test does no real I/O
+- [x] 6.2 GREEN: implement detection over injectable probe(s); `swift test` green
 - [ ] 6.3 Implement onboarding UI: explanation + button deep-linking to `x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles`
 - [ ] 6.4 Implement graceful degradation: scan all FDA-free roots; represent unreadable protected regions as a distinct "needs Full Disk Access" node; never report hidden regions as empty/clean; rescan picks up a newly-granted permission
 - [ ] 6.5 Manually verify the deep link opens the correct Settings pane and that degradation shows the placeholder (record result; GUI step)
