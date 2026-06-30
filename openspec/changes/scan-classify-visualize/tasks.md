@@ -2,29 +2,29 @@
 
 ## 1. Core data model
 
-- [ ] 1.1 RED: write tests for immutable `FileRecord` (path, isDirectory, isSymlink, logicalSize, allocatedSize, mtime) and the `SafetyTier` enum (`safe/cache/delegated/risky/never`) and `Classification` (tier + reason)
-- [ ] 1.2 GREEN: add the value types to `CleanupCore` (pure, no I/O); `swift test` green
-- [ ] 1.3 REFACTOR: tidy naming/equatability; confirm types are `Sendable`/value semantics
+- [x] 1.1 RED: write tests for immutable `FileRecord` (path, isDirectory, isSymlink, logicalSize, allocatedSize, mtime) and the `SafetyTier` enum (`safe/cache/delegated/risky/never`) and `Classification` (tier + reason)
+- [x] 1.2 GREEN: add the value types to `CleanupCore` (pure, no I/O); `swift test` green
+- [x] 1.3 REFACTOR: tidy naming/equatability; confirm types are `Sendable`/value semantics
 
 ## 2. Safety classifier (the spine)
 
-- [ ] 2.1 RED: write the hard-blacklist tests first — `/System`, `/usr` (not `/usr/local`), `/bin`, `/sbin`, `/private/var/vm`, sealed volume → `never`; blacklist beats any other match; `..`/trailing-slash normalization cannot bypass; `/usr/local` is NOT never. Run `swift test`, confirm red
-- [ ] 2.2 GREEN: implement `classify(path) -> Classification` with the blacklist checked first and unconditionally; make blacklist tests pass
-- [ ] 2.3 RED: write ruleset tests for known locations from research.md (Trash/DerivedData→safe; Caches→cache; snapshots/Docker.raw/Homebrew→delegated; App Support/iOS backups/Downloads→risky) plus edge cases: unknown path → conservative (never `safe`); most-specific rule wins
-- [ ] 2.4 GREEN: implement the ordered ruleset (most-specific wins) + conservative default; make tests pass
-- [ ] 2.5 REFACTOR: extract the ruleset as legible data mirroring research.md; add an invariant test asserting no input yields a deletable tier for any blacklisted path; `swift test` green
+- [x] 2.1 RED: write the hard-blacklist tests first — `/System`, `/usr` (not `/usr/local`), `/bin`, `/sbin`, `/private/var/vm`, sealed volume → `never`; blacklist beats any other match; `..`/trailing-slash normalization cannot bypass; `/usr/local` is NOT never. Run `swift test`, confirm red
+- [x] 2.2 GREEN: implement `classify(path) -> Classification` with the blacklist checked first and unconditionally; make blacklist tests pass
+- [x] 2.3 RED: write ruleset tests for known locations from research.md (Trash/DerivedData→safe; Caches→cache; snapshots/Docker.raw/Homebrew→delegated; App Support/iOS backups/Downloads→risky) plus edge cases: unknown path → conservative (never `safe`); most-specific rule wins
+- [x] 2.4 GREEN: implement the ordered ruleset (most-specific wins) + conservative default; make tests pass
+- [x] 2.5 REFACTOR: extract the ruleset as legible data mirroring research.md; add an invariant test asserting no input yields a deletable tier for any blacklisted path; `swift test` green
 
 ## 3. Size roll-up tree
 
-- [ ] 3.1 RED: write tests for building a navigable tree from a stream/array of `FileRecord`s — parent size = sum of descendants' allocated sizes; hardlinked inode counted once; ranking children by size
-- [ ] 3.2 GREEN: implement the pure roll-up (records → tree) in `CleanupCore`; `swift test` green
-- [ ] 3.3 REFACTOR: ensure roll-up is incremental-friendly (can fold streamed records); tidy
+- [x] 3.1 RED: write tests for building a navigable tree from a stream/array of `FileRecord`s — parent size = sum of descendants' allocated sizes; hardlinked inode counted once; ranking children by size
+- [x] 3.2 GREEN: implement the pure roll-up (records → tree) in `CleanupCore`; `swift test` green
+- [x] 3.3 REFACTOR: ensure roll-up is incremental-friendly (can fold streamed records); tidy
 
 ## 4. Treemap layout (pure squarified)
 
-- [ ] 4.1 RED: write tests for `layout(nodes, rect) -> [PlacedRect]` — areas proportional to sizes; no overlaps; within bounds; single node fills bounds; zero-size nodes occupy no area and cause no divide-by-zero; tiny nodes aggregate into one "Other"
-- [ ] 4.2 GREEN: implement the squarified treemap algorithm + threshold aggregation + depth bound; `swift test` green
-- [ ] 4.3 REFACTOR: clean the geometry code; property-style assertions (sum of areas ≈ bounds area)
+- [x] 4.1 RED: write tests for `layout(nodes, rect) -> [PlacedRect]` — areas proportional to sizes; no overlaps; within bounds; single node fills bounds; zero-size nodes occupy no area and cause no divide-by-zero; tiny nodes aggregate into one "Other"
+- [x] 4.2 GREEN: implement the squarified treemap algorithm + threshold aggregation + depth bound; `swift test` green
+- [x] 4.3 REFACTOR: clean the geometry code; property-style assertions (sum of areas ≈ bounds area)
 
 ## 5. Filesystem scanner (imperative shell)
 
