@@ -18,14 +18,3 @@ The project SHALL maintain a single 1024×1024 master image as the canonical app
 #### Scenario: Edge case — a missing or wrong-size master fails the build clearly
 - **WHEN** the generation step runs without a valid 1024×1024 master present
 - **THEN** it fails with a clear error and a non-zero exit, rather than producing a broken or empty icon
-
-### Requirement: The icon is shown in the Dock during local development
-The application SHALL set its Dock icon at launch from the bundled master image, so the branded icon appears even when the app is run via `swift run` (which produces no `.app` bundle).
-
-#### Scenario: Dock icon is set when running without a bundle
-- **WHEN** the app is launched via `swift run`
-- **THEN** it sets its application icon from the bundled master, and the Dock shows the branded icon rather than a generic one
-
-#### Scenario: Edge case — a missing runtime resource does not crash the app
-- **WHEN** the bundled icon resource cannot be loaded at launch
-- **THEN** the app continues to run normally with the default icon instead of crashing

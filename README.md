@@ -61,8 +61,9 @@ swift run osx-cleanup
 ```
 
 A release build of the app bundle is produced by CI on tagged releases (see
-below). Released artifacts are currently **unsigned**: on first launch,
-right-click the app and choose **Open**, then confirm in the Gatekeeper dialog.
+below), carrying the app icon (see [`docs/app-icon/`](docs/app-icon/)). Released
+artifacts are currently **unsigned**: on first launch, right-click the app and
+choose **Open**, then confirm in the Gatekeeper dialog.
 
 ### Using it (Milestone 1)
 

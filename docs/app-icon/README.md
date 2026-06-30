@@ -1,76 +1,80 @@
 # App icon
 
-Design source-of-truth for the application icon. The icon is **not yet wired
-into the app** — this folder holds the generation prompt and (once produced) the
-master image, ready for a future `app-icon` change to turn into a real
-`AppIcon.appiconset` / `.icns`.
+Design source-of-truth for the application icon.
+
+The committed master is **`docs/app-icon/AppIcon.png`** (1024×1024) — the single
+source of truth and build input. The build reads it to generate the `.icns` that
+becomes the distributed app's Finder/Dock icon. This folder also holds the design
+spec and the generation prompt below.
 
 ## Concept
 
-**Ultra-minimal "clean sparkle."** A single white sparkle/shine glyph centered
-on a blue→teal squircle. The palette intentionally matches the app's safety-tier
-colors (cache = teal, delegated = blue) and reads as *clean, fresh, trustworthy
-system tool*.
+**External drive being swept clean.** A small external hard drive (rounded
+enclosure at a slight angle, with green + blue LED indicator lights) with a broom
+sweeping a file and a folder off to one side — clearing away digital clutter — on
+a soft blue→teal squircle. The palette matches the app's safety-tier colors
+(cache = teal, delegated = blue) and reads as a clean, trustworthy system tool.
 
 ## Design spec (Apple HIG-aligned)
 
 | Aspect | Requirement |
 | --- | --- |
 | **Shape** | Apple "squircle" — continuous-curvature rounded square; background fills the whole frame (macOS masks the corners) |
-| **Subject** | ONE simple, centered glyph; legible from 16px to 1024px |
-| **Style** | Flat-modern with subtle depth (soft top-down light, gentle inner highlight); not skeuomorphic, not a sticker/cartoon |
-| **Color** | Single blue→teal gradient (on-brand with the tier palette) |
-| **Padding** | Generous negative space; glyph never touches edges |
-| **Hard NOs** | No text/letters/numbers, no external drop shadow, no dock reflection, no busy detail, no photographic texture |
-| **Export** | 1024×1024 PNG master, square, opaque (full-bleed) |
+| **Subject** | External drive (with depth + LEDs) + broom sweeping a file and folder aside; the drive is the clear focus |
+| **Style** | Clean, modern macOS look with subtle depth; soft top-down lighting; not flat-rectangle, not cartoonish |
+| **Color** | Blue→teal gradient (on-brand with the tier palette) |
+| **Padding** | Comfortable; the composition stays simple and legible at small sizes |
+| **Hard NOs** | No text/letters/numbers, no stars/sparkles/spark-or-gem logos (Gemini's own mark), no border, no external drop shadow |
+| **Export** | 1024×1024 PNG master, square |
 
-## Generation prompt
+## Generation prompt (Gemini / Imagen)
 
-Paste into an image-generation model (Gemini / Imagen, DALL·E, etc.):
+This is the prompt that produced the current master. Gemini has no negative-
+prompt field, so the "do not" instructions live inline; iterate via follow-up
+messages ("remove the small sparkle", "make the drive bigger", "fewer files").
 
 ```text
-A minimalist macOS application icon in the official Apple Human Interface
-Guidelines style. The entire square frame is filled, edge to edge, by a smooth
-soft gradient that blends from a light sky blue at the top to a deeper teal-blue
-at the bottom, shaped as a rounded square with Apple's continuous-curvature
-"squircle" corners. Perfectly centered on it is a single, simple, elegant white
-sparkle/shine glyph (a clean four-point star-shine) with a soft glow, conveying
-cleanliness, freshness, and reclaimed space. Generous negative space around the
-glyph; calm and balanced. Soft top-down studio lighting, very subtle depth and
-inner highlight, flat-modern (not skeuomorphic, not a sticker). Crisp,
-high-resolution, vector-clean edges, no noise, no texture. Stays legible at very
-small sizes. 1024x1024, square.
-Negative: no text, no letters, no words, no numbers, no border, no outer drop
-shadow, no dock reflection, no background scene, not cartoonish, not busy.
+Create a macOS application icon in the clean, simple style of Apple's Human
+Interface Guidelines. It is a rounded square (Apple's smooth "squircle" shape)
+whose background fills edge to edge with a soft gradient — light sky blue at the
+top blending to a deeper teal-blue at the bottom. In the center, place a small
+external hard drive: a rounded-rectangle enclosure shown at a slight angle so it
+has clear three-dimensional depth (not a flat rectangle), in soft white/silver
+with gentle shading, and two small glowing LED indicator lights on its front (one
+green, one blue) as round dots. A simple, minimal broom or hand brush is sweeping
+across the drive, pushing a few small, simple file and folder icons (a plain
+document shape and a plain folder shape) off to one side, as if clearing away
+clutter. Keep the composition simple and uncluttered with comfortable padding.
+Soft top-down lighting, clean modern look. Crisp edges; it must stay clear and
+legible at small sizes.
+
+Important: do NOT include any text, letters, numbers, stars, sparkles,
+four-pointed star shapes, spark or gem logos, or AI logos. The LED lights and the
+files/folders should be simple solid shapes with no text or writing on them.
 ```
 
 ### Tuning knobs
 
 ```
-  sparkle style   "a single four-point star-shine"  →  "a soft six-point sparkle"
-                  or  "two sparkles, one large and one small, asymmetric"
-  palette         blue→teal (default)  →  "indigo to violet"
-                  or  "graphite to slate (pro/dark tool look)"
-  finish          "flat-modern"  →  "with a subtle glassy / frosted highlight"
-  fallback fix    if it adds text or a hard square, append:
-                  "absolutely no text anywhere; perfectly smooth squircle corners"
+  drive depth   "slight angle"  →  "gentle 3/4 view"   (more dimension)
+  broom         "minimal broom" →  "small hand brush"  (cleaner silhouette)
+  clutter       files + folder  →  fewer items if it gets busy at small sizes
+  palette       blue→teal (default)  →  "indigo to violet" / "graphite to slate"
+  fallback fix  "absolutely no text or sparkles anywhere; one clear external drive"
 ```
 
-## Where to put the generated image
+## How it's used
 
-Save your chosen master here as:
+Turning the master into the actual app icon is handled by the `app-icon`
+OpenSpec change:
+- `scripts/make-icns.sh` generates `AppIcon.icns` (16→1024 px, @1x/@2x) from the
+  master — generated at build time, never committed.
+- `scripts/make-app-bundle.sh` assembles the `.app` with the icon and
+  `CFBundleIconFile`, and is called by the release workflow.
 
-```
-docs/app-icon/icon-1024.png      (1024×1024, PNG, square, opaque)
-```
+> Note: the Finder/Dock icon applies to the assembled/released `.app`. Running
+> via raw `swift run` (no `.app` bundle) shows a generic Dock icon — a runtime
+> override was intentionally deferred (see the `app-icon` change's design D5).
 
-A larger square master (e.g. 2048×2048) is also welcome — name it
-`icon-master.png` — but `icon-1024.png` is the one the build will downscale from.
-
-## Next step (a future change, not done yet)
-
-Once `icon-1024.png` is in place, an `app-icon` OpenSpec change will:
-1. Generate the full size set (16, 32, 64, 128, 256, 512, 1024 px at @1x/@2x)
-   into `Sources/OSXCleanupApp/Resources/AppIcon.appiconset/`.
-2. Reference it from the app bundle so the icon shows in Finder/Dock.
-3. Include it in the release `.app` produced by the CI release pipeline.
+To replace the icon, drop a new 1024×1024 PNG at `docs/app-icon/AppIcon.png` and
+rebuild.

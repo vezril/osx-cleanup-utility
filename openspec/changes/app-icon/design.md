@@ -5,22 +5,22 @@ The app is a **pure Swift Package Manager** project — there is no Xcode projec
 ## Goals / Non-Goals
 
 **Goals:**
-- One canonical 1024×1024 master drives everything (no duplicated binaries).
+- One canonical 1024×1024 master drives the icon (no duplicated binaries).
 - Deterministic, reproducible `.icns` generation from that master (`sips` + `iconutil`).
 - The released `.app` shows the icon in Finder and the Dock.
-- `swift run` shows the icon in the Dock during development.
 - The release workflow and local dev share one bundle-assembly path (no drift).
 
 **Non-Goals:**
 - Signing/notarization (M5); dark-mode/alternate variants; in-app icon picker.
 - Committing generated artifacts (`.iconset`/`.icns`) — they are build outputs.
+- **Deferred:** a runtime Dock icon for raw `swift run` (see D5).
 
 ## Decisions
 
-### D1: Single canonical master at `Sources/OSXCleanupApp/Resources/AppIcon.png`
-The 1024×1024 PNG lives inside the app target's `Resources/` (moved from `docs/app-icon/`). Both consumers read it from there: the SPM resource pipeline (runtime icon) and the `.icns` generator (bundle icon).
-**Why:** SPM can only bundle resources that live under the target's source tree, and a single source avoids a duplicated ~1 MB binary drifting out of sync. `docs/app-icon/README.md` remains the design record and points here.
-**Alternative:** keep the master in `docs/` and copy it into the target at build time — rejected; a generated file in the source tree is messier than one canonical committed asset.
+### D1: Single canonical master at `docs/app-icon/AppIcon.png`
+The 1024×1024 PNG lives in its design folder, `docs/app-icon/`, as the single committed source of truth and build input; the `.icns` generator and bundle-assembly script read it by path. It is intentionally **not** inside a Swift target's source tree: with the runtime-resource icon descoped (D5), placing it under the app target would only trip SwiftPM's "unhandled resource" warning for no remaining consumer.
+**Why:** one canonical asset co-located with its design spec/prompt; no duplication; no SPM resource declaration needed.
+**Alternative:** place it under the app target as an SPM resource — rejected once the runtime icon was descoped.
 
 ### D2: Generate `.icns` from the master with `sips` + `iconutil`; don't commit it
 `scripts/make-icns.sh` builds an `AppIcon.iconset` with the Apple-required sizes (16, 32, 128, 256, 512 at @1x and @2x) by downscaling the master with `sips`, then runs `iconutil -c icns`. The `.icns` is a build output, produced at package time, never committed.
@@ -36,10 +36,9 @@ Refactor the inline `.app` assembly currently embedded in `release.yml` into `sc
 **Why:** removes the duplicated inline plist/assembly, keeps CI and local output identical, and makes the bundle reproducible for the GUI verification still outstanding.
 **Trade-off:** a workflow refactor; mitigated by keeping the script's behavior identical to today plus the icon.
 
-### D5: Runtime Dock icon for `swift run` via `Bundle.module` + `applicationIconImage`
-The app target declares `resources: [.process("Resources")]`; at launch the app loads `AppIcon.png` from `Bundle.module` and sets `NSApplication.shared.applicationIconImage`. This makes the Dock icon correct even when there is no `.app` bundle (raw `swift run`).
-**Why:** the Finder/`.icns` path only helps the assembled bundle; this covers development and is a few lines. It also means the Dock icon is right the moment the app launches, before any window appears.
-**Alternative:** accept a generic icon in dev — rejected; the icon is cheap to set and helps the manual GUI checks.
+### D5: Runtime Dock icon for `swift run` — DEFERRED
+*Originally planned* (`resources: [.process("Resources")]` + set `applicationIconImage` from `Bundle.module` at launch), but **descoped during implementation.** Three problems make it disproportionate plumbing for a dev-only nicety: (1) SwiftPM's `Bundle.module` traps (`fatalError`) when its resource bundle is absent, which would *crash* rather than degrade — directly at odds with the no-crash intent; (2) the hand-assembled `.app` copies only the binary, so the SPM resource bundle would have to be copied in too for it to resolve there; (3) SwiftPM cannot unit-test an executable target's resources, so a real test would require re-layering the resource + accessor into a library target.
+**Resolution:** the distributed `.app` already gets its icon from the `.icns` + `CFBundleIconFile` (D3), which is what users actually see. The raw-`swift run` Dock icon stays generic and is left as a future enhancement (a nil-safe accessor in a library target + copying the resource bundle into the `.app`).
 
 ## Risks / Trade-offs
 
