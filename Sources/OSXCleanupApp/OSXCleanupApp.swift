@@ -1,41 +1,144 @@
 import SwiftUI
+import AppKit
 import CleanupCore
 
 // OSXCleanupApp — the imperative shell.
 //
-// This target wires the SwiftUI UI and (in later milestones) the side-effecting
-// calls: FileManager enumeration/deletion, tmutil, NSWorkspace, security-scoped
-// bookmarks. It holds NO decision logic — anything that decides *what* is safe,
-// bloated, or deletable belongs in CleanupCore so it can be unit-tested.
-//
-// Milestone 0 ships a placeholder window only. No scanning, no deletion.
+// Wires the SwiftUI UI to the pure core (CleanupCore) and platform layer
+// (CleanupScan): pick a root → scan → roll up → classify → treemap. M1 is
+// strictly read-only: there is no delete/trash/clean affordance anywhere.
 
 @main
 struct OSXCleanupApp: App {
     var body: some Scene {
         WindowGroup("osx-cleanup-utility") {
             ContentView()
+                .frame(minWidth: 820, minHeight: 560)
         }
     }
 }
 
-/// Placeholder root view. Displays identity from the functional core to prove
-/// the app shell is correctly wired to CleanupCore. No features yet.
 struct ContentView: View {
+    @State private var model = ScanModel()
+
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "internaldrive")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text("osx-cleanup-utility")
-                .font(.title.bold())
-            Text("FOSS macOS disk cleanup — Milestone 0 scaffold")
-                .foregroundStyle(.secondary)
-            Text("core v\(CleanupCore.version)")
-                .font(.caption.monospaced())
-                .foregroundStyle(.tertiary)
+        VStack(spacing: 0) {
+            toolbar
+            Divider()
+            if model.fda == .notGranted {
+                FDAOnboardingView(model: model).padding(8)
+            }
+            content
+            Divider()
+            footer
         }
-        .padding(40)
-        .frame(minWidth: 420, minHeight: 280)
+        .onAppear { model.refreshFDA() }
+    }
+
+    // MARK: - toolbar
+
+    private var toolbar: some View {
+        HStack(spacing: 10) {
+            Button {
+                if let path = chooseFolder() { startScan(path) }
+            } label: {
+                Label("Choose Folder…", systemImage: "folder")
+            }
+
+            Button("Scan ~/Library/Caches") {
+                startScan(NSHomeDirectory() + "/Library/Caches")
+            }
+
+            if model.phase == .scanning {
+                ProgressView().controlSize(.small)
+                Text("Scanning… \(model.scannedCount) items")
+                    .font(.caption).foregroundStyle(.secondary)
+                Button("Cancel") { model.cancel() }
+            } else if model.phase == .done {
+                Text("\(model.scannedCount) items · \(formatBytes(model.rootTree?.size ?? 0))")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(10)
+    }
+
+    // MARK: - main content
+
+    @ViewBuilder
+    private var content: some View {
+        if let current = model.current {
+            HSplitView {
+                VStack(spacing: 0) {
+                    breadcrumb(current)
+                    TreemapView(node: current, model: model)
+                        .background(Color(nsColor: .windowBackgroundColor))
+                }
+                .frame(minWidth: 480)
+                InspectorView(model: model)
+                    .frame(width: 280)
+            }
+        } else {
+            VStack(spacing: 10) {
+                Image(systemName: "internaldrive")
+                    .font(.system(size: 48)).foregroundStyle(.secondary)
+                Text("Choose a folder to visualize its disk usage.")
+                    .foregroundStyle(.secondary)
+                Text("core v\(CleanupCore.version)")
+                    .font(.caption.monospaced()).foregroundStyle(.tertiary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private func breadcrumb(_ current: SizeNode) -> some View {
+        HStack(spacing: 6) {
+            Button {
+                model.drillOut()
+            } label: {
+                Label("Up", systemImage: "chevron.up")
+            }
+            .disabled(model.path.isEmpty)
+
+            Button("Root") { model.resetToRoot() }
+                .disabled(model.path.isEmpty)
+
+            Text(current.path)
+                .font(.caption.monospaced())
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.head)
+            Spacer()
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+    }
+
+    // MARK: - footer
+
+    private var footer: some View {
+        HStack {
+            TierLegend()
+            Spacer()
+            Text("Read-only — no files are deleted")
+                .font(.caption2).foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+
+    // MARK: - actions
+
+    private func startScan(_ path: String) {
+        Task { await model.scan(rootPath: path) }
+    }
+
+    private func chooseFolder() -> String? {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Scan"
+        return panel.runModal() == .OK ? panel.url?.path : nil
     }
 }

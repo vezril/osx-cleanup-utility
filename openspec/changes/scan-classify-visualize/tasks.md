@@ -38,21 +38,21 @@
 
 - [x] 6.1 RED: write tests for FDA detection logic — readable probe → granted; permission error → not granted; non-existent/ambiguous probe → not granted (treat as ungranted). Inject the probe result so the unit test does no real I/O
 - [x] 6.2 GREEN: implement detection over injectable probe(s); `swift test` green
-- [ ] 6.3 Implement onboarding UI: explanation + button deep-linking to `x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles`
-- [ ] 6.4 Implement graceful degradation: scan all FDA-free roots; represent unreadable protected regions as a distinct "needs Full Disk Access" node; never report hidden regions as empty/clean; rescan picks up a newly-granted permission
-- [ ] 6.5 Manually verify the deep link opens the correct Settings pane and that degradation shows the placeholder (record result; GUI step)
+- [x] 6.3 Implement onboarding UI: explanation + button deep-linking to `x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles`
+- [x] 6.4 Implement graceful degradation: scan all FDA-free roots; represent unreadable protected regions as a distinct "needs Full Disk Access" node; never report hidden regions as empty/clean; rescan picks up a newly-granted permission
+- [~] 6.5 Manually verify the deep link opens the correct Settings pane and that degradation shows the placeholder (record result; GUI step)
 
 ## 7. Treemap UI + inspector (read-only)
 
-- [ ] 7.1 Build the SwiftUI treemap view that renders `PlacedRect`s (Canvas/shapes) colored by tier, with a tier legend
-- [ ] 7.2 Implement drill-in/drill-out navigation preserving parent context
-- [ ] 7.3 Implement the inspector panel: selected node's path, allocated size, tier, and classification reason
-- [ ] 7.4 Assert read-only: no delete/trash/clean affordance exists on any node, including `safe`-tier (UI review + checklist)
-- [ ] 7.5 Wire the app shell: pick scan root(s) → run scanner → roll up → classify → layout → render; show scan progress + cancel
+- [x] 7.1 Build the SwiftUI treemap view that renders `PlacedRect`s (Canvas/shapes) colored by tier, with a tier legend
+- [x] 7.2 Implement drill-in/drill-out navigation preserving parent context
+- [x] 7.3 Implement the inspector panel: selected node's path, allocated size, tier, and classification reason
+- [x] 7.4 Assert read-only: no delete/trash/clean affordance exists on any node, including `safe`-tier (UI review + checklist)
+- [x] 7.5 Wire the app shell: pick scan root(s) → run scanner → roll up → classify → layout → render; show scan progress + cancel
 
 ## 8. Integration & verification
 
-- [ ] 8.1 End-to-end on a real user directory (e.g. `~/Library/Caches`): scan → classify → treemap renders, inspector shows correct tiers/reasons, no deletion controls present
-- [ ] 8.2 Run full `swift build` + `swift test` from a clean `.build`; confirm green
-- [ ] 8.3 Run `openspec validate scan-classify-visualize`; resolve issues
-- [ ] 8.4 Confirm every scenario in the four specs maps to a task above; update README (M1 usage, FDA note) and roadmap
+- [~] 8.1 End-to-end on a real user directory (e.g. `~/Library/Caches`): scan → classify → treemap renders, inspector shows correct tiers/reasons, no deletion controls present
+- [x] 8.2 Run full `swift build` + `swift test` from a clean `.build`; confirm green
+- [x] 8.3 Run `openspec validate scan-classify-visualize`; resolve issues
+- [x] 8.4 Confirm every scenario in the four specs maps to a task above; update README (M1 usage, FDA note) and roadmap
