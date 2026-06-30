@@ -250,6 +250,12 @@ The full paper trail lives in [`openspec/`](openspec/): active work under
 `changes/`, completed milestones under `changes/archive/`, and the current
 specification baseline under `specs/`.
 
+## Contributing
+
+Contributions follow the same spec-driven, test-first process described above.
+See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the ground rules, the OpenSpec
+workflow phase by phase, the dev setup, and the PR checklist.
+
 ## License
 
 [MIT](LICENSE) © 2026 Calvin Ference
