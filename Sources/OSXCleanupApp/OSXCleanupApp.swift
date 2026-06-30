@@ -20,6 +20,8 @@ struct OSXCleanupApp: App {
 
 struct ContentView: View {
     @State private var model = ScanModel()
+    @State private var delegated = DelegatedModel()
+    @State private var showingDelegated = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -42,6 +44,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: Binding(get: { model.showingResults }, set: { model.showingResults = $0 })) {
             ResultsSheet(model: model)
+        }
+        .sheet(isPresented: $showingDelegated) {
+            DelegatedCleanupView(model: delegated)
         }
     }
 
@@ -81,6 +86,13 @@ struct ContentView: View {
             Button("Scan ~/Library/Caches") {
                 startScan(NSHomeDirectory() + "/Library/Caches")
             }
+
+            Button {
+                showingDelegated = true
+            } label: {
+                Label("Delegated Cleanup…", systemImage: "wrench.and.screwdriver")
+            }
+            .help("Reclaim snapshots, Docker, and package-manager caches via their own tools")
 
             if model.phase == .scanning {
                 ProgressView().controlSize(.small)

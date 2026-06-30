@@ -34,16 +34,16 @@
 
 ## 5. Delegated cleanup UI (build-verified)
 
-- [ ] 5.1 Build a Delegated Cleanup panel listing detected providers (with category/description) and a "not detected" state for absent ones
-- [ ] 5.2 Add the snapshot list (dates, count) with per-snapshot delete and a "thin to free…" control
-- [ ] 5.3 Wire dry-run/preview where supported (brew --dry-run, snapshot list, docker prune summary) shown before the destructive run
-- [ ] 5.4 Wire run actions with confirmation, a running/cancel state, and a per-action result summary (output + exit)
-- [ ] 5.5 Graceful degradation review: absent tools show "not detected"; nothing claims success on a non-zero exit
+- [x] 5.1 Build a Delegated Cleanup panel listing detected providers (with category/description) and a "not detected" state for absent ones
+- [x] 5.2 Add the snapshot list (dates, count) with per-snapshot delete and a "thin to free…" control
+- [x] 5.3 Wire dry-run/preview where supported (brew --dry-run, snapshot list, docker prune summary) shown before the destructive run
+- [x] 5.4 Wire run actions with confirmation, a running/cancel state, and a per-action result summary (output + exit)
+- [x] 5.5 Graceful degradation review: absent tools show "not detected"; nothing claims success on a non-zero exit
 
 ## 6. Integration & verification
 
-- [ ] 6.1 Manual: on a machine with Homebrew/Docker, run a dry-run then a real cleanup; confirm output + reclaimed space are reported (GUI step; record result)
-- [ ] 6.2 Manual: list real APFS local snapshots via `tmutil` and delete/thin one on a disposable snapshot (GUI step; record result)
-- [ ] 6.3 Run full `swift build` + `swift test` from a clean `.build`; confirm green
-- [ ] 6.4 Run `openspec validate delegated-cleanup`; resolve issues
-- [ ] 6.5 Confirm every spec scenario maps to a task; update README (M3 usage, no-sudo, vetted-commands safety) and roadmap
+- [~] 6.1 Manual: on a machine with Homebrew/Docker, run a dry-run then a real cleanup; confirm output + reclaimed space are reported (GUI step; record result)
+- [~] 6.2 Manual: list real APFS local snapshots via `tmutil` and delete/thin one on a disposable snapshot (GUI step; record result)
+- [x] 6.3 Run full `swift build` + `swift test` from a clean `.build`; confirm green
+- [x] 6.4 Run `openspec validate delegated-cleanup`; resolve issues
+- [x] 6.5 Confirm every spec scenario maps to a task; update README (M3 usage, no-sudo, vetted-commands safety) and roadmap

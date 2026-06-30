@@ -10,11 +10,11 @@ native SwiftUI app that **shows you what is taking up space** and lets you
 **reclaim it safely**, with important system files protected as a hard,
 non-negotiable rule.
 
-> **Status: Milestone 2 (safe deletion).** The app scans a folder, classifies
-> every location into a 5-tier safety model, renders a treemap, and can now
-> **reclaim space** — selected files/folders are **moved to the Trash by
-> default** (reversible), behind a dry-run preview and tier-scaled confirmation.
-> Protected system paths can never be removed. See the roadmap below.
+> **Status: Milestone 3 (delegated cleanup).** On top of scan + visualize (M1)
+> and safe file deletion (M2), the app now reclaims the bloat that file deletion
+> *can't* safely touch — **APFS local snapshots** (via `tmutil`), **Docker**, and
+> **package-manager caches** — by running each tool's own vetted cleanup command.
+> No `sudo`; commands are fixed and never built from input. See the roadmap below.
 
 ## Safety stance (non-negotiable)
 
@@ -96,8 +96,27 @@ right-click the app and choose **Open**, then confirm in the Gatekeeper dialog.
 planner *and* re-checked by the executor immediately before removal — they can
 never be deleted. Trash-by-default means mistakes are recoverable via Finder's
 **Put Back**. A locked or vanished file is reported but never aborts the batch.
-Delegated cleanup (`tmutil` snapshots, Docker, Homebrew) is **M3** — for now
-those show as `Delegated` and are best cleaned with their own tools.
+
+### Delegated cleanup (Milestone 3)
+
+Some of the biggest space hogs — **APFS local snapshots**, **Docker** images,
+and **package-manager caches** (Homebrew, npm, yarn, pnpm, pip) — must NOT be
+deleted as files: doing so corrupts the tool or is outright impossible
+(snapshot blocks aren't on the filesystem). Instead, open **Delegated
+Cleanup…** from the toolbar:
+
+- **Snapshots** — lists APFS local snapshots (often the single biggest reclaim)
+  and lets you delete one or **thin to free ~N GB**, all via `tmutil`.
+- **Tools** — shows which of Homebrew/Docker/npm/yarn/pnpm/pip are installed
+  (others show *not detected*). **Preview** runs a dry-run where supported
+  (e.g. `brew cleanup --dry-run`); **Clean** runs the real command and reports
+  its output.
+
+**Safety:** every command is a **fixed, vetted argument vector** run directly
+(never through a shell, never built from your input — no injection surface),
+no `sudo` is ever used, and even snapshot dates parsed from `tmutil` are
+validated before being passed back as arguments. Tools are found at known
+install locations because a bundled app doesn't inherit your shell `PATH`.
 
 ## Run the tests
 
@@ -152,8 +171,8 @@ follow [Conventional Commits](https://www.conventionalcommits.org/)
 | --------- | --------------------------------------------------------------------- |
 | **M0** ✅ | Scaffold: buildable app, TDD harness, CI/CD                            |
 | **M1** ✅ | Read-only scanner + 5-tier safety classifier + treemap UI + Full Disk Access onboarding |
-| **M2** ✅ | Manual + curated-preset deletion (Mechanism A, "move to Trash" default, tiered confirmation) (this milestone) |
-| **M3**    | Delegated cleanup: APFS snapshots (`tmutil`), Docker, Homebrew, npm/pip/cargo |
+| **M2** ✅ | Manual + curated-preset deletion (Mechanism A, "move to Trash" default, tiered confirmation) |
+| **M3** ✅ | Delegated cleanup: APFS snapshots (`tmutil`), Docker, Homebrew, npm/yarn/pnpm/pip (this milestone) |
 | **M4+**   | Scheduled scans, dry-run/undo, exclusions, signing + notarization, Homebrew cask |
 
 ## Development workflow
