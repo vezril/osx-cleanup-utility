@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import CleanupCore
 
 // Renders a node's children as a squarified treemap. The geometry comes from the
@@ -22,6 +23,7 @@ struct TreemapView: View {
                     cell(for: p, child: childByPath[p.id])
                 }
             }
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
         }
     }
 
@@ -70,15 +72,23 @@ struct TreemapView: View {
             }
         }
         .frame(width: w, height: h)
-        .offset(x: CGFloat(p.rect.x), y: CGFloat(p.rect.y))
+        // The hit area + gestures are attached to the FRAMED cell, then the cell
+        // is placed with `.position` (center-based). Using `.offset` here instead
+        // moved the visual but left the hittable region at the layout origin, so
+        // taps landed on the wrong tile. Double-click drills; single-click selects,
+        // or toggles mark-for-deletion when ⌘ is held (read from NSEvent rather
+        // than a competing `.simultaneousGesture`, which swallowed single clicks).
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { if let child { model.drill(into: child) } }
-        .onTapGesture(count: 1) { if let child { model.select(child) } }
-        .simultaneousGesture(
-            TapGesture().modifiers(.command).onEnded {
-                if let child { model.toggleDeletion(child) }
+        .onTapGesture(count: 1) {
+            guard let child else { return }
+            if NSEvent.modifierFlags.contains(.command) {
+                model.toggleDeletion(child)
+            } else {
+                model.select(child)
             }
-        )
+        }
         .help(child.map { "\($0.name) — \(formatBytes($0.size)) — \(model.classification($0).tier.label)" } ?? p.id)
+        .position(x: CGFloat(p.rect.x) + w / 2, y: CGFloat(p.rect.y) + h / 2)
     }
 }
