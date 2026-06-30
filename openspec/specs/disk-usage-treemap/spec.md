@@ -25,7 +25,7 @@ The treemap layout SHALL be a pure function mapping a set of sized nodes and a b
 - **THEN** the layout completes without division-by-zero and zero-size nodes occupy no area
 
 ### Requirement: Treemap renders by safety tier and supports read-only navigation and inspection
-The UI SHALL render the placed rectangles colored by safety tier, allow the user to drill into a directory and back out, and provide an inspector showing the selected node's path, size, tier, and the reason for that tier. M1 is read-only: the treemap SHALL NOT offer any delete or "clean" affordance.
+The UI SHALL render the placed rectangles colored by safety tier, allow the user to drill into a directory and back out, and provide an inspector showing the selected node's path, size, tier, and the reason for that tier. Navigation and inspection remain non-destructive. The treemap MAY offer a deletion action, but only via the gated deletion flow: the user multi-selects items, a plan preview is shown, and removal occurs only after the tier-appropriate confirmation. The treemap SHALL NOT delete anything directly from a single click, and SHALL NOT offer any delete affordance for a `NEVER`-tier node.
 
 #### Scenario: Nodes are colored by tier
 - **WHEN** the treemap is displayed for a classified scan
@@ -39,6 +39,10 @@ The UI SHALL render the placed rectangles colored by safety tier, allow the user
 - **WHEN** the user drills into a subdirectory and then navigates back
 - **THEN** the treemap returns to the previous level showing the same parent context
 
-#### Scenario: Edge case — no deletion affordance is present
-- **WHEN** any node, including a `SAFE`-tier one, is selected
-- **THEN** the UI offers inspection only and presents no control that deletes, trashes, or cleans the node
+#### Scenario: Deletion is gated behind selection, preview, and confirmation
+- **WHEN** the user chooses to delete one or more selected tiles
+- **THEN** a deletion plan preview is shown and nothing is removed until the required tier-appropriate confirmation is given
+
+#### Scenario: Edge case — a NEVER-tier node offers no deletion affordance
+- **WHEN** a `NEVER`-tier node is selected
+- **THEN** the UI offers inspection only and presents no control that deletes, trashes, or cleans that node
